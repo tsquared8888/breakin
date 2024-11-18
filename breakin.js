@@ -29,12 +29,31 @@ var ball = {
     y: GAME_HEIGHT/2 - BALL_HEIGHT/2,
     w: BALL_WIDTH,
     h:BALL_HEIGHT,
-    x_vel: 0,
-    y_vel: 1
+    x_vel: 0.25,
+    y_vel: 0.5
+}
+
+var brick = {
+    x: 0,
+    y: 0,
+    w: 32,
+    h: 8,
 }
 
 /************* SUPPORT FUNCTIONS *************/
 
+function collisionCheck(ob1, ob2) {
+    // If the equations below are > 0, we know the second object (after minus) is between the first object's position and width
+    var x1 = ob1.x + ob1.w - ob2.x;
+    var x2 = ob2.x + ob2.w - ob1.x;
+    var y1 = ob1.y + ob1.h - ob2.y;
+    var y2 = ob2.y + ob2.h - ob1.y;
+    if (((x1 > 0 && x1 <= ob1.w) || (x2 > 0 && x2 <= ob2.w))
+        && ((y1 > 0 && y1 <= ob1.h)|| (y2 > 0 && y2 <= ob2.h))) 
+    {
+        return true;
+    }
+}
 
 /************* MAIN FUNCTIONS *************/
 
@@ -71,6 +90,17 @@ function update(deltaTime) {
         paddle.x = paddle.x;
     } else {
         paddle.x += paddle.x_vel * deltaTime;
+    }
+    if (collisionCheck(paddle, ball)) {
+        console.log("done");
+        ball.y_vel *= -1;
+    }
+
+    if (ball.y <= 0) {
+        ball.y_vel *= -1;
+    }
+    if (ball.x <= 0 || ball.x + ball.w > GAME_WIDTH) {
+        ball.x_vel *= -1;
     }
     ball.x += ball.x_vel * deltaTime * BALL_SPEED;
     ball.y += ball.y_vel * deltaTime * BALL_SPEED;
