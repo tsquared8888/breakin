@@ -8,6 +8,11 @@ const PADDLE_SPEED = 20;
 const BALL_WIDTH = 8;
 const BALL_HEIGHT = 8;
 const BALL_SPEED = 30;
+const BRICK_ROWS = 7;
+const BRICK_COLS = 6;
+const BRICK_WIDTH = 32;
+const BRICK_HEIGHT = 8;
+const BRICK_SPACING = 4;
 var gameStart = false;
 var lastTime = 0;
 var gameOver = false;
@@ -33,11 +38,23 @@ var ball = {
     y_vel: 0.5
 }
 
-var brick = {
-    x: 0,
-    y: 0,
-    w: 32,
-    h: 8,
+function brick(x, y, w, h) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+}
+
+var brick_array = new Array(BRICK_ROWS);
+for (let i = 0; i < BRICK_ROWS; i++) {
+    brick_array[i] = new Array(BRICK_COLS);
+}
+
+// Create bricks
+for (let i = 0; i < BRICK_ROWS; i++) {
+    for (let j = 0; j < BRICK_COLS; j++) {
+        brick_array[i][j] = new brick((i*BRICK_WIDTH)+(BRICK_SPACING*i)+BRICK_SPACING, (j*BRICK_HEIGHT)+(BRICK_SPACING*j)+BRICK_SPACING, BRICK_WIDTH, BRICK_HEIGHT);
+    }
 }
 
 /************* SUPPORT FUNCTIONS *************/
@@ -53,6 +70,34 @@ function collisionCheck(ob1, ob2) {
     {
         return true;
     }
+}
+
+function movePaddle(deltaTime) {
+    paddle.x_vel = 0;
+    paddle.x_vel = paddle.movR + paddle.movL;
+    if (paddle.x >= GAME_WIDTH - paddle.w/2 && paddle.x_vel > 0 ||
+        paddle.x <= -paddle.w/2 && paddle.x_vel < 0) 
+    {
+        paddle.x = paddle.x;
+    } else {
+        paddle.x += paddle.x_vel * deltaTime;
+    }
+}
+
+function moveBall(deltaTime) {
+    if (collisionCheck(paddle, ball)) {
+        ball.y_vel *= -1;
+    }
+
+    // Bounce off walls
+    if (ball.y <= 0) {
+        ball.y_vel *= -1;
+    }
+    if (ball.x <= 0 || ball.x + ball.w > GAME_WIDTH) {
+        ball.x_vel *= -1;
+    }
+    ball.x += ball.x_vel * deltaTime * BALL_SPEED;
+    ball.y += ball.y_vel * deltaTime * BALL_SPEED;
 }
 
 /************* MAIN FUNCTIONS *************/
@@ -82,38 +127,23 @@ function input() {
 }
 
 function update(deltaTime) {
-    paddle.x_vel = 0;
-    paddle.x_vel = paddle.movR + paddle.movL;
-    if (paddle.x >= GAME_WIDTH - paddle.w/2 && paddle.x_vel > 0 ||
-        paddle.x <= -paddle.w/2 && paddle.x_vel < 0) 
-    {
-        paddle.x = paddle.x;
-    } else {
-        paddle.x += paddle.x_vel * deltaTime;
-    }
-    if (collisionCheck(paddle, ball)) {
-        console.log("done");
-        ball.y_vel *= -1;
-    }
-
-    if (ball.y <= 0) {
-        ball.y_vel *= -1;
-    }
-    if (ball.x <= 0 || ball.x + ball.w > GAME_WIDTH) {
-        ball.x_vel *= -1;
-    }
-    ball.x += ball.x_vel * deltaTime * BALL_SPEED;
-    ball.y += ball.y_vel * deltaTime * BALL_SPEED;
+    movePaddle(deltaTime);
+    moveBall(deltaTime);
 
 }
 
-function draw(deltaTime) {
-    //ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+function draw() {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     ctx.fillStyle = 'white'
     ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
     ctx.fillRect(ball.x, ball.y, ball.w, ball.h);
+    for (let i = 0; i < BRICK_ROWS; i++) {
+        for (let j = 0; j < BRICK_COLS; j++) {
+            let brick = brick_array[i][j];
+            ctx.fillRect(brick.x, brick.y, brick.w, brick.h);
+        }
+    }
 }
 
 function gameLoop(timestamp) {
