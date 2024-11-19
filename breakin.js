@@ -7,7 +7,7 @@ const PADDLE_HEIGHT = 8;
 const PADDLE_SPEED = 20;
 const BALL_WIDTH = 8;
 const BALL_HEIGHT = 8;
-const BALL_SPEED = 30;
+const BALL_SPEED = 25;
 const BRICK_ROWS = 7;
 const BRICK_COLS = 6;
 const BRICK_WIDTH = 32;
@@ -34,8 +34,8 @@ var ball = {
     y: GAME_HEIGHT/2 - BALL_HEIGHT/2,
     w: BALL_WIDTH,
     h:BALL_HEIGHT,
-    x_vel: 0.25,
-    y_vel: 0.5
+    x_vel: 0,
+    y_vel: 1
 }
 
 function brick(x, y, w, h) {
@@ -50,7 +50,7 @@ for (let i = 0; i < BRICK_ROWS; i++) {
     brick_array[i] = new Array(BRICK_COLS);
 }
 
-// Create bricks
+// // Create bricks
 for (let i = 0; i < BRICK_ROWS; i++) {
     for (let j = 0; j < BRICK_COLS; j++) {
         brick_array[i][j] = new brick((i*BRICK_WIDTH)+(BRICK_SPACING*i)+BRICK_SPACING, (j*BRICK_HEIGHT)+(BRICK_SPACING*j)+BRICK_SPACING, BRICK_WIDTH, BRICK_HEIGHT);
@@ -85,9 +85,32 @@ function movePaddle(deltaTime) {
 }
 
 function moveBall(deltaTime) {
+    // Change direction of ball based on location of collision on paddle
     if (collisionCheck(paddle, ball)) {
-        ball.y_vel *= -1;
+        ball.y_vel = -1;
+        if (ball.x + ball.w/2 < paddle.x+8) {
+            ball.x_vel = -0.75;
+        } else if (ball.x + ball.w/2 < paddle.x + 16) {
+            ball.x_vel = -0.25;
+        } else if (ball.x + ball.w/2 < paddle.x + 24) {
+            ball.x_vel = 0;
+        } else if (ball.x + ball.w/2 < paddle.x + 32) {
+            ball.x_vel = 0.25;
+            ball.y_vel = -1;
+        } else if (ball.x + ball.w/2 > paddle.x + 32) {
+            ball.x_vel = 0.75;
+        }
     }
+
+    // bounce off bricks
+    // for (let i = 0; i < BRICK_ROWS; i++) {
+    //     for (let j = 0; j < BRICK_COLS; j++) {
+    //         let brick = brick_array[i][j];
+    //         if (collisionCheck(brick, ball)) {
+
+    //         }
+    //     }
+    // }
 
     // Bounce off walls
     if (ball.y <= 0) {
@@ -153,6 +176,7 @@ function gameLoop(timestamp) {
     update(deltaTime);
     draw(deltaTime);
     requestAnimationFrame(gameLoop);
+    console.log(deltaTime);
 }
 
 requestAnimationFrame(gameLoop);
