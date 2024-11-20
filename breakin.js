@@ -50,7 +50,7 @@ for (let i = 0; i < BRICK_ROWS; i++) {
     brick_array[i] = new Array(BRICK_COLS);
 }
 
-// // Create bricks
+// Create bricks
 for (let i = 0; i < BRICK_ROWS; i++) {
     for (let j = 0; j < BRICK_COLS; j++) {
         brick_array[i][j] = new brick((i*BRICK_WIDTH)+(BRICK_SPACING*i)+BRICK_SPACING, (j*BRICK_HEIGHT)+(BRICK_SPACING*j)+BRICK_SPACING, BRICK_WIDTH, BRICK_HEIGHT);
@@ -58,6 +58,22 @@ for (let i = 0; i < BRICK_ROWS; i++) {
 }
 
 /************* SUPPORT FUNCTIONS *************/
+
+function resetGame() {
+    gameOver = false;
+    document.getElementById('game-over-text').innerHTML = '';
+    ball.x = GAME_WIDTH/2 - BALL_WIDTH/2;
+    ball.y = GAME_HEIGHT/2 - BALL_HEIGHT/2;
+    ball.x_vel = 0;
+    ball.y_vel = 0.5
+    paddle.x = GAME_WIDTH/2 - PADDLE_WIDTH/2;
+    paddle.y = GAME_HEIGHT - PADDLE_HEIGHT;
+    for (let i = 0; i < BRICK_ROWS; i++) {
+        for (let j = 0; j < BRICK_COLS; j++) {
+            brick_array[i][j] = new brick((i*BRICK_WIDTH)+(BRICK_SPACING*i)+BRICK_SPACING, (j*BRICK_HEIGHT)+(BRICK_SPACING*j)+BRICK_SPACING, BRICK_WIDTH, BRICK_HEIGHT);
+        }
+    }
+}
 
 function collisionCheck(ob1, ob2) {
     // If the equations below are > 0, we know the second object (after minus) is between the first object's position and width
@@ -87,8 +103,6 @@ function collisionCheck(ob1, ob2) {
 function collisionLocation(brick, ball) {
     let xDiff = Math.abs((ball.x + ball.w/2) - (brick.x + brick.w/2));
     let yDiff = Math.abs((ball.y + ball.h/2) - (brick.y + brick.h/2));
-    console.log("xDiff: " + xDiff);
-    console.log("yDiff: " + yDiff);
     if (xDiff - brick.w/2 > yDiff - brick.h/2) {
         ball.x_vel *= -1;
     } else {
@@ -105,6 +119,10 @@ function movePaddle(deltaTime) {
         paddle.x = paddle.x;
     } else {
         paddle.x += paddle.x_vel * deltaTime;
+    }
+    if (gameOver) {
+        paddle.movL = 0;
+        paddle.movR = 0;
     }
 }
 
@@ -146,6 +164,12 @@ function moveBall(deltaTime) {
     }
     ball.x += ball.x_vel * deltaTime * BALL_SPEED;
     ball.y += ball.y_vel * deltaTime * BALL_SPEED;
+
+    // End game
+    if (ball.y > GAME_HEIGHT) {
+        gameOver = true;
+        ball.y_vel = 0;
+    }
 }
 
 /************* MAIN FUNCTIONS *************/
@@ -160,6 +184,10 @@ function input() {
                 paddle.movL = -PADDLE_SPEED;
             }
             
+        } else {
+            if (event.key == 'Enter') {
+                resetGame();
+            }
         }
     })
 
@@ -178,7 +206,6 @@ function input() {
 function update(deltaTime) {
     movePaddle(deltaTime);
     moveBall(deltaTime);
-
 }
 
 function draw() {
@@ -192,6 +219,9 @@ function draw() {
             let brick = brick_array[i][j];
             ctx.fillRect(brick.x, brick.y, brick.w, brick.h);
         }
+    }
+    if (gameOver) {
+        document.getElementById('game-over-text').innerHTML = 'GAME OVER<br><br>Press Enter <br>To Restart';
     }
 }
 
