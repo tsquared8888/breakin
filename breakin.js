@@ -17,6 +17,7 @@ var gameStart = false;
 var lastTime = 0;
 var gameOver = false;
 var score = 0;
+var paddleCollided = false;
 
 /* Game objects */
 var paddle = {
@@ -140,7 +141,7 @@ function movePaddle(deltaTime) {
 
 function moveBall(deltaTime) {
     // Change direction of ball based on location of collision on paddle
-    if (collisionCheck(paddle, ball)) {
+    if (!paddleCollided && collisionCheck(paddle, ball)) {
         ball.y_vel *= -1;
         if (ball.x + ball.w/2 < paddle.x+8) {
             ball.x_vel = -0.75;
@@ -153,6 +154,9 @@ function moveBall(deltaTime) {
         } else if (ball.x + ball.w/2 > paddle.x + 32) {
             ball.x_vel = 0.75;
         }
+        paddleCollided = true;
+    } else if (!collisionCheck(paddle, ball)) {
+        paddleCollided = false;
     }
 
     // bounce off bricks
