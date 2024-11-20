@@ -101,12 +101,24 @@ function collisionCheck(ob1, ob2) {
  * 
  */
 function collisionLocation(brick, ball) {
-    let xDiff = Math.abs((ball.x + ball.w/2) - (brick.x + brick.w/2));
-    let yDiff = Math.abs((ball.y + ball.h/2) - (brick.y + brick.h/2));
-    if (xDiff - brick.w/2 > yDiff - brick.h/2) {
-        ball.x_vel *= -1;
+    let xDiff = (ball.x + ball.w/2) - (brick.x + brick.w/2);
+    let yDiff = (ball.y + ball.h/2) - (brick.y + brick.h/2);
+    if (Math.abs(xDiff) - brick.w/2 > Math.abs(yDiff) - brick.h/2) {
+        // If the ball hits two platforms simultaneously, the old code of multiplying velocity by -1
+        // triggered twice resulting in ball going the same direction which we don't want.
+        let vel = Math.abs(ball.x_vel);
+        if (xDiff < 0) {
+            ball.x_vel = -vel;
+        } else {
+            ball.x_vel = vel;
+        }
     } else {
-        ball.y_vel *= -1;
+        let vel = Math.abs(ball.y_vel);
+        if (yDiff < 0) {
+            ball.y_vel = -vel;
+        } else {
+            ball.y_vel = vel;
+        }
     }
 }
 
@@ -149,7 +161,6 @@ function moveBall(deltaTime) {
             let brick = brick_array[i][j];
             if (brick != 0 && collisionCheck(brick, ball)) {
                 collisionLocation(brick, ball);
-                //ball.y_vel *= -1;
                 brick_array[i][j] = 0;
             }
         }
@@ -211,7 +222,7 @@ function update(deltaTime) {
 function draw() {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    ctx.fillStyle = 'white'
+    ctx.fillStyle = 'white';
     ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
     ctx.fillRect(ball.x, ball.y, ball.w, ball.h);
     for (let i = 0; i < BRICK_ROWS; i++) {
