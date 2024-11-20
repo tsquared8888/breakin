@@ -35,7 +35,7 @@ var ball = {
     w: BALL_WIDTH,
     h:BALL_HEIGHT,
     x_vel: 0,
-    y_vel: 1
+    y_vel: 0.5
 }
 
 function brick(x, y, w, h) {
@@ -72,6 +72,30 @@ function collisionCheck(ob1, ob2) {
     }
 }
 
+// Determines where ball hit the brick
+/*
+ * Explanation:
+ * The math is difficult to explain and understand without images, but I may need it for future projects so here we go.
+ * xDiff and yDiff gets distance between center of ball and brick for the respective axes
+ * This works regardless of the ball/brick positions since we are using absolute values.
+ * Then we subtract the brick width and height from xDiff and yDiff respectively.
+ * This gives us the distance between the center of the ball and the edge of the brick.
+ * We know that the bigger number means the collision was smaller on that particular axis.
+ * As a result, we should be changing the velocity on that axis since that is the axis that triggered the collision.
+ * 
+ */
+function collisionLocation(brick, ball) {
+    let xDiff = Math.abs((ball.x + ball.w/2) - (brick.x + brick.w/2));
+    let yDiff = Math.abs((ball.y + ball.h/2) - (brick.y + brick.h/2));
+    console.log("xDiff: " + xDiff);
+    console.log("yDiff: " + yDiff);
+    if (xDiff - brick.w/2 > yDiff - brick.h/2) {
+        ball.x_vel *= -1;
+    } else {
+        ball.y_vel *= -1;
+    }
+}
+
 function movePaddle(deltaTime) {
     paddle.x_vel = 0;
     paddle.x_vel = paddle.movR + paddle.movL;
@@ -87,7 +111,7 @@ function movePaddle(deltaTime) {
 function moveBall(deltaTime) {
     // Change direction of ball based on location of collision on paddle
     if (collisionCheck(paddle, ball)) {
-        ball.y_vel = -1;
+        ball.y_vel *= -1;
         if (ball.x + ball.w/2 < paddle.x+8) {
             ball.x_vel = -0.75;
         } else if (ball.x + ball.w/2 < paddle.x + 16) {
@@ -96,21 +120,22 @@ function moveBall(deltaTime) {
             ball.x_vel = 0;
         } else if (ball.x + ball.w/2 < paddle.x + 32) {
             ball.x_vel = 0.25;
-            ball.y_vel = -1;
         } else if (ball.x + ball.w/2 > paddle.x + 32) {
             ball.x_vel = 0.75;
         }
     }
 
     // bounce off bricks
-    // for (let i = 0; i < BRICK_ROWS; i++) {
-    //     for (let j = 0; j < BRICK_COLS; j++) {
-    //         let brick = brick_array[i][j];
-    //         if (collisionCheck(brick, ball)) {
-
-    //         }
-    //     }
-    // }
+    for (let i = 0; i < BRICK_ROWS; i++) {
+        for (let j = 0; j < BRICK_COLS; j++) {
+            let brick = brick_array[i][j];
+            if (brick != 0 && collisionCheck(brick, ball)) {
+                collisionLocation(brick, ball);
+                //ball.y_vel *= -1;
+                brick_array[i][j] = 0;
+            }
+        }
+    }
 
     // Bounce off walls
     if (ball.y <= 0) {
@@ -134,6 +159,7 @@ function input() {
             if (event.key == 'ArrowLeft') {
                 paddle.movL = -PADDLE_SPEED;
             }
+            
         }
     })
 
@@ -176,7 +202,6 @@ function gameLoop(timestamp) {
     update(deltaTime);
     draw(deltaTime);
     requestAnimationFrame(gameLoop);
-    console.log(deltaTime);
 }
 
 requestAnimationFrame(gameLoop);
